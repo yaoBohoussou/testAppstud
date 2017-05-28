@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">CodingTest</string>
+    <string name="menu_map"> Map </string>
+    <string name="menu_list"> List </string>
 </resources>
