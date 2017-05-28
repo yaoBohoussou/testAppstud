@@ -51,7 +51,7 @@ public class PhotoTask implements Runnable
             Bitmap result = photoResult.getBitmap();
 
             PlaceDetected placeDetected = new PlaceDetected(placeLikelihood.getPlace(),result);
-            Message completeMessage = MapActivity.handler.obtainMessage(0, placeDetected);
+            Message completeMessage = handler.obtainMessage(0, placeDetected);
             completeMessage.sendToTarget();
 
 
@@ -65,7 +65,7 @@ public class PhotoTask implements Runnable
             canvas.drawColor(Color.WHITE);
 
             PlaceDetected placeDetected = new PlaceDetected(placeLikelihood.getPlace(),result);
-            Message completeMessage = MapActivity.handler.obtainMessage(1, placeDetected);
+            Message completeMessage = handler.obtainMessage(1, placeDetected);
             completeMessage.sendToTarget();
 
         }

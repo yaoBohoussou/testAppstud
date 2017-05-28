@@ -4,11 +4,13 @@ import android.graphics.Bitmap;
 
 import com.google.android.gms.location.places.Place;
 
+import java.io.Serializable;
+
 /**
  * Created by yann on 28/05/17.
  */
 
-public class PlaceDetected
+public class PlaceDetected implements Serializable
 {
     Place place;
     Bitmap image;

@@ -1,6 +1,7 @@
 package appstud.codingtest;
 
 import android.Manifest;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
@@ -14,34 +15,66 @@ import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
 import android.support.annotation.NonNull;
+import android.support.design.widget.BottomNavigationView;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.MenuItem;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.PendingResult;
 import com.google.android.gms.common.api.ResultCallback;
+import com.google.android.gms.common.api.Status;
 import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.location.places.Place;
+import com.google.android.gms.location.places.PlaceFilter;
 import com.google.android.gms.location.places.PlaceLikelihoodBuffer;
 import com.google.android.gms.location.places.Places;
+import com.google.android.gms.location.places.ui.PlaceAutocompleteFragment;
+import com.google.android.gms.location.places.ui.PlaceSelectionListener;
+import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.MarkerOptions;
 
+import java.util.LinkedList;
+import java.util.List;
+
 import appstud.codingtest.Callbacks.ResultCallbackImpl;
 import appstud.codingtest.utils.PhotoTask;
 import appstud.codingtest.utils.PlaceDetected;
 
-public class MapActivity extends FragmentActivity implements OnMapReadyCallback, GoogleApiClient.OnConnectionFailedListener {
+public class MapActivity extends FragmentActivity implements OnMapReadyCallback, GoogleApiClient.OnConnectionFailedListener, PlaceSelectionListener
+{
     public static String TAG = "Appstud TAG";
     private static GoogleMap mMap;
     private GoogleApiClient mGoogleApiClient;
-    public static Handler handler = new Handler(Looper.getMainLooper())
+    static List<PlaceDetected> placeDetecteds ;
+
+    private BottomNavigationView.OnNavigationItemSelectedListener navListener = new BottomNavigationView.OnNavigationItemSelectedListener() {
+        @Override
+        public boolean onNavigationItemSelected(@NonNull MenuItem item)
+        {
+            Intent secondeActivite;
+            switch (item.getItemId())
+            {
+                case R.id.navigation_map:
+                    return true;
+                case R.id.navigation_list:
+                    secondeActivite = new Intent(MapActivity.this, ListActivity.class);
+                    MapActivity.this.startActivity(secondeActivite);
+                    return true;
+
+            }
+            return false;
+        }
+    };
+
+    private Handler handler = new Handler(Looper.getMainLooper())
     {
         @Override
         public void handleMessage(Message inputMessage)
@@ -49,6 +82,7 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback,
             if (inputMessage.obj instanceof PlaceDetected)
             {
                 PlaceDetected place = (PlaceDetected) inputMessage.obj ;
+                MapActivity.placeDetecteds.add(place);
                 switch (inputMessage.what) {
                     case 0:
                         Log.v(MapActivity.TAG, "Sucess 0");
@@ -89,6 +123,8 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback,
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_map);
 
+        this.placeDetecteds = new LinkedList<>();
+
         mGoogleApiClient = new GoogleApiClient.Builder(this)
                 .enableAutoManage(this, this)
                 .addApi(LocationServices.API)
@@ -99,6 +135,13 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback,
 
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
+
+        PlaceAutocompleteFragment autocompleteFragment = (PlaceAutocompleteFragment) getFragmentManager().findFragmentById(R.id.autocomplete_fragment);
+        autocompleteFragment.setOnPlaceSelectedListener(this);
+
+        BottomNavigationView bottomNavigationView = (BottomNavigationView) findViewById(R.id.navigation);
+        bottomNavigationView.setSelectedItemId(R.id.navigation_map);
+        bottomNavigationView.setOnNavigationItemSelectedListener(this.navListener);
 
     }
 
@@ -125,12 +168,32 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback,
 
     private void retrievePlaces()
     {
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            return;
+        if(MapActivity.placeDetecteds == null || MapActivity.placeDetecteds.size() == 0) {
+            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                return;
+            }
+            PendingResult<PlaceLikelihoodBuffer> result = Places.PlaceDetectionApi.getCurrentPlace(this.mGoogleApiClient, null);
+            ResultCallback callbalck = new ResultCallbackImpl(this.mGoogleApiClient, true, this.handler);
+            result.setResultCallback(callbalck);
         }
-        PendingResult<PlaceLikelihoodBuffer> result = Places.PlaceDetectionApi.getCurrentPlace(this.mGoogleApiClient, null);
-        ResultCallback callbalck = new ResultCallbackImpl(this.mMap, this.mGoogleApiClient);
-        result.setResultCallback(callbalck);
+        else
+        {
+            for(PlaceDetected placeDetected : MapActivity.placeDetecteds)
+            {
+                Bitmap image = getCroppedBitmap(Bitmap.createScaledBitmap(placeDetected.getImage(), 60, 60, false));
+
+                // Superposition de deux marqueurs L'un étant un disque noir et l'autre une photo de la place .
+                mMap.addMarker(new MarkerOptions()
+                        .position(placeDetected.getPlace().getLatLng())
+                        .icon(BitmapDescriptorFactory.fromBitmap(getBlackCircle(image)))
+                );
+                mMap.addMarker(new MarkerOptions()
+                        .position(placeDetected.getPlace().getLatLng())
+                        .title(String.valueOf(placeDetected.getPlace().getName()))
+                        .icon(BitmapDescriptorFactory.fromBitmap(image))
+                );
+            }
+        }
 
     }
 
@@ -170,5 +233,31 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback,
         cv.drawOval(rectf,p);
 
         return blackCircle;
+    }
+
+    @Override
+    public void onPlaceSelected(Place place)
+    {
+        mMap.clear();
+        Log.i(MapActivity.TAG, "Place Selected: " + place.getName());
+
+        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(place.getLatLng(), (float)10)) ;
+
+        LinkedList<String> restrict = new LinkedList<String>();
+        restrict.add(place.getId());
+        PlaceFilter placeFilter = new PlaceFilter(false,restrict);
+
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            return;
+        }
+        PendingResult<PlaceLikelihoodBuffer> result = Places.PlaceDetectionApi.getCurrentPlace(mGoogleApiClient, placeFilter);
+        ResultCallback callbalck = new ResultCallbackImpl(this.mGoogleApiClient, true, this.handler);
+        result.setResultCallback(callbalck);
+    }
+
+    @Override
+    public void onError(Status status)
+    {
+        Log.e(MapActivity.TAG, status.toString());
     }
 }
