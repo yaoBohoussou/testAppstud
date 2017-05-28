@@ -168,12 +168,17 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback,
 
     private void retrievePlaces()
     {
-        if(MapActivity.placeDetecteds == null || MapActivity.placeDetecteds.size() == 0) {
+        if(MapActivity.placeDetecteds == null )
+            MapActivity.placeDetecteds = new LinkedList<>();
+
+        if(MapActivity.placeDetecteds.size() == 0 )
+        {
+
             if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
                 return;
             }
             PendingResult<PlaceLikelihoodBuffer> result = Places.PlaceDetectionApi.getCurrentPlace(this.mGoogleApiClient, null);
-            ResultCallback callbalck = new ResultCallbackImpl(this.mGoogleApiClient, true, this.handler);
+            ResultCallback callbalck = new ResultCallbackImpl(this.mGoogleApiClient, this.handler);
             result.setResultCallback(callbalck);
         }
         else
@@ -251,7 +256,7 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback,
             return;
         }
         PendingResult<PlaceLikelihoodBuffer> result = Places.PlaceDetectionApi.getCurrentPlace(mGoogleApiClient, placeFilter);
-        ResultCallback callbalck = new ResultCallbackImpl(this.mGoogleApiClient, true, this.handler);
+        ResultCallback callbalck = new ResultCallbackImpl(this.mGoogleApiClient, this.handler);
         result.setResultCallback(callbalck);
     }
 

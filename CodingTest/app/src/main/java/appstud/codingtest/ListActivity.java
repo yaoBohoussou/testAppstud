@@ -44,6 +44,7 @@ public class ListActivity extends AppCompatActivity implements GoogleApiClient.O
             {
                 case R.id.navigation_map:
                     secondeActivite = new Intent(ListActivity.this, MapActivity.class);
+                    MapActivity.placeDetecteds.clear();
                     ListActivity.this.startActivity(secondeActivite);
                     return true;
                 case R.id.navigation_list:
@@ -63,7 +64,7 @@ public class ListActivity extends AppCompatActivity implements GoogleApiClient.O
             if (inputMessage.obj instanceof PlaceDetected)
             {
                 PlaceDetected place = (PlaceDetected) inputMessage.obj ;
-                MapActivity.placeDetecteds.add(place);
+                //MapActivity.placeDetecteds.add(place);
                 ((PlaceDetectedAdapter)listView.getAdapter()).notifyDataSetChanged();
             }
             else
@@ -95,6 +96,7 @@ public class ListActivity extends AppCompatActivity implements GoogleApiClient.O
     public void onRefresh()
     {
         MapActivity.placeDetecteds.clear();
+        ((PlaceDetectedAdapter)listView.getAdapter()).notifyDataSetChanged();
         retrievePlaces();
     }
 
@@ -118,7 +120,7 @@ public class ListActivity extends AppCompatActivity implements GoogleApiClient.O
             return;
         }
         PendingResult<PlaceLikelihoodBuffer> result = Places.PlaceDetectionApi.getCurrentPlace(mGoogleApiClient, null);
-        ResultCallback callbalck = new ResultCallbackImpl(mGoogleApiClient,false, this.handler);
+        ResultCallback callbalck = new ResultCallbackImpl(mGoogleApiClient, this.handler);
         result.setResultCallback(callbalck);
 
     }

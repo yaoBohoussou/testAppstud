@@ -27,12 +27,10 @@ public class ResultCallbackImpl implements ResultCallback
 {
 
     private GoogleApiClient mGoogleApiClient;
-    private Boolean fromMapActivity;
     Handler handler;
 
-    public ResultCallbackImpl(GoogleApiClient mGoogleApiClient, Boolean fromMapActivity, Handler handler) {
+    public ResultCallbackImpl(GoogleApiClient mGoogleApiClient,  Handler handler) {
         this.mGoogleApiClient = mGoogleApiClient;
-        this.fromMapActivity = fromMapActivity;
         this.handler = handler;
     }
 
@@ -44,18 +42,9 @@ public class ResultCallbackImpl implements ResultCallback
             PlaceLikelihoodBuffer likelyPlaces = (PlaceLikelihoodBuffer) result;
             for (PlaceLikelihood placeLikelihood : likelyPlaces)
             {
-                /*PhotoTask photoTask;
-                if(this.fromMapActivity) {
-                    photoTask = new PhotoTask(mGoogleApiClient, placeLikelihood, handler);
-                }
-                else
-                {
-                    photoTask = new PhotoTask(mGoogleApiClient, placeLikelihood, handler);
-                }*/
                 PhotoTask photoTask = new PhotoTask(mGoogleApiClient, placeLikelihood, handler);
                 new Thread(photoTask).start();
             }
-            //likelyPlaces.release();
         }
         else
         {
