@@ -13,6 +13,7 @@ import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.MenuItem;
 import android.widget.ListView;
 
@@ -25,6 +26,8 @@ import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.location.places.PlaceLikelihoodBuffer;
 import com.google.android.gms.location.places.Places;
 
+import java.util.LinkedList;
+
 import appstud.codingtest.Callbacks.ResultCallbackImpl;
 import appstud.codingtest.utils.PlaceDetected;
 import appstud.codingtest.utils.PlaceDetectedAdapter;
@@ -34,6 +37,7 @@ public class ListActivity extends AppCompatActivity implements GoogleApiClient.O
 
     private ListView listView;
     private SwipeRefreshLayout swipeRefreshLayout;
+    private LinkedList<PlaceDetected> placeDetecteds;
     private BottomNavigationView.OnNavigationItemSelectedListener navListener = new BottomNavigationView.OnNavigationItemSelectedListener()
     {
         @Override
@@ -43,9 +47,10 @@ public class ListActivity extends AppCompatActivity implements GoogleApiClient.O
             switch (item.getItemId())
             {
                 case R.id.navigation_map:
-                    secondeActivite = new Intent(ListActivity.this, MapActivity.class);
-                    MapActivity.placeDetecteds.clear();
-                    ListActivity.this.startActivity(secondeActivite);
+                    //secondeActivite = new Intent(ListActivity.this, MapActivity.class);
+                    //MapActivity.placeDetecteds.clear();
+                    //ListActivity.this.startActivity(secondeActivite);
+                    ListActivity.this.finish();
                     return true;
                 case R.id.navigation_list:
                     return true;
@@ -64,7 +69,7 @@ public class ListActivity extends AppCompatActivity implements GoogleApiClient.O
             if (inputMessage.obj instanceof PlaceDetected)
             {
                 PlaceDetected place = (PlaceDetected) inputMessage.obj ;
-                //MapActivity.placeDetecteds.add(place);
+                placeDetecteds.add(place);
                 ((PlaceDetectedAdapter)listView.getAdapter()).notifyDataSetChanged();
             }
             else
@@ -81,8 +86,10 @@ public class ListActivity extends AppCompatActivity implements GoogleApiClient.O
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_list);
 
+        this.placeDetecteds = MapActivity.placeDetecteds;
+
         this.listView = (ListView) findViewById(R.id.list);
-        this.listView.setAdapter(new PlaceDetectedAdapter(this, R.layout.list, MapActivity.placeDetecteds));
+        this.listView.setAdapter(new PlaceDetectedAdapter(this, R.layout.list, this.placeDetecteds));
 
         this.swipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.content);
         this.swipeRefreshLayout.setOnRefreshListener(this);
@@ -95,7 +102,7 @@ public class ListActivity extends AppCompatActivity implements GoogleApiClient.O
     @Override
     public void onRefresh()
     {
-        MapActivity.placeDetecteds.clear();
+        this.placeDetecteds.clear();
         ((PlaceDetectedAdapter)listView.getAdapter()).notifyDataSetChanged();
         retrievePlaces();
     }
@@ -123,5 +130,29 @@ public class ListActivity extends AppCompatActivity implements GoogleApiClient.O
         ResultCallback callbalck = new ResultCallbackImpl(mGoogleApiClient, this.handler);
         result.setResultCallback(callbalck);
 
+    }
+
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event)
+    {
+        if ((keyCode == KeyEvent.KEYCODE_BACK))
+        {
+            finish();
+        }
+        return super.onKeyDown(keyCode, event);
+    }
+
+    @Override
+    public void onPause()
+    {
+        super.onPause();
+        finish();
+    }
+
+    @Override
+    public void onStop()
+    {
+        super.onStop();
+        finish();
     }
 }

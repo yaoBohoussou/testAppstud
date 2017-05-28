@@ -31,6 +31,7 @@ import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.location.places.Place;
 import com.google.android.gms.location.places.PlaceFilter;
 import com.google.android.gms.location.places.PlaceLikelihoodBuffer;
+import com.google.android.gms.location.places.PlaceReport;
 import com.google.android.gms.location.places.Places;
 import com.google.android.gms.location.places.ui.PlaceAutocompleteFragment;
 import com.google.android.gms.location.places.ui.PlaceSelectionListener;
@@ -53,7 +54,8 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback,
     public static String TAG = "Appstud TAG";
     private static GoogleMap mMap;
     private GoogleApiClient mGoogleApiClient;
-    static List<PlaceDetected> placeDetecteds ;
+    private BottomNavigationView bottomNavigationView;
+    static LinkedList<PlaceDetected> placeDetecteds ;
 
     private BottomNavigationView.OnNavigationItemSelectedListener navListener = new BottomNavigationView.OnNavigationItemSelectedListener() {
         @Override
@@ -82,7 +84,7 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback,
             if (inputMessage.obj instanceof PlaceDetected)
             {
                 PlaceDetected place = (PlaceDetected) inputMessage.obj ;
-                MapActivity.placeDetecteds.add(place);
+                placeDetecteds.add(place);
                 switch (inputMessage.what) {
                     case 0:
                         Log.v(MapActivity.TAG, "Sucess 0");
@@ -139,9 +141,9 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback,
         PlaceAutocompleteFragment autocompleteFragment = (PlaceAutocompleteFragment) getFragmentManager().findFragmentById(R.id.autocomplete_fragment);
         autocompleteFragment.setOnPlaceSelectedListener(this);
 
-        BottomNavigationView bottomNavigationView = (BottomNavigationView) findViewById(R.id.navigation);
-        bottomNavigationView.setSelectedItemId(R.id.navigation_map);
-        bottomNavigationView.setOnNavigationItemSelectedListener(this.navListener);
+        this.bottomNavigationView = (BottomNavigationView) findViewById(R.id.navigation);
+        this.bottomNavigationView.setSelectedItemId(R.id.navigation_map);
+        this.bottomNavigationView.setOnNavigationItemSelectedListener(this.navListener);
 
     }
 
@@ -168,10 +170,10 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback,
     //FOnction qui récupère les places sÀ partir de la position courante du user ou à partir des données entrées dans le champ texte
     private void retrievePlaces()
     {
-        if(MapActivity.placeDetecteds == null )
-            MapActivity.placeDetecteds = new LinkedList<>();
+        if(placeDetecteds == null )
+            placeDetecteds = new LinkedList<>();
 
-        if(MapActivity.placeDetecteds.size() == 0 )
+        if(placeDetecteds.size() == 0 )
         {
 
             if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
@@ -181,25 +183,6 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback,
             ResultCallback callbalck = new ResultCallbackImpl(this.mGoogleApiClient, this.handler);
             result.setResultCallback(callbalck);
         }
-        else
-        {
-            for(PlaceDetected placeDetected : MapActivity.placeDetecteds)
-            {
-                Bitmap image = getCroppedBitmap(Bitmap.createScaledBitmap(placeDetected.getImage(), 60, 60, false));
-
-                // Superposition de deux marqueurs L'un étant un disque noir et l'autre une photo de la place .
-                mMap.addMarker(new MarkerOptions()
-                        .position(placeDetected.getPlace().getLatLng())
-                        .icon(BitmapDescriptorFactory.fromBitmap(getBlackCircle(image)))
-                );
-                mMap.addMarker(new MarkerOptions()
-                        .position(placeDetected.getPlace().getLatLng())
-                        .title(String.valueOf(placeDetected.getPlace().getName()))
-                        .icon(BitmapDescriptorFactory.fromBitmap(image))
-                );
-            }
-        }
-
     }
 
     /**
@@ -243,10 +226,13 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback,
     @Override
     public void onPlaceSelected(Place place)
     {
+        placeDetecteds.clear();
         mMap.clear();
         Log.i(MapActivity.TAG, "Place Selected: " + place.getName());
 
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(place.getLatLng(), (float)10)) ;
+        mMap.addMarker(new MarkerOptions().position(place.getLatLng()).title(String.valueOf(place.getName())));
+
 
         LinkedList<String> restrict = new LinkedList<String>();
         restrict.add(place.getId());
@@ -255,6 +241,9 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback,
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             return;
         }
+
+        PendingResult<Status> status =  Places.PlaceDetectionApi.reportDeviceAtPlace(mGoogleApiClient, PlaceReport.create(place.getId(),"test"));
+
         PendingResult<PlaceLikelihoodBuffer> result = Places.PlaceDetectionApi.getCurrentPlace(mGoogleApiClient, placeFilter);
         ResultCallback callbalck = new ResultCallbackImpl(this.mGoogleApiClient, this.handler);
         result.setResultCallback(callbalck);
@@ -264,5 +253,13 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback,
     public void onError(Status status)
     {
         Log.e(MapActivity.TAG, status.toString());
+    }
+
+    public void onResume()
+    {
+        super.onResume();
+        if(this.bottomNavigationView !=  null)
+            this.bottomNavigationView.setSelectedItemId(R.id.navigation_map);
+
     }
 }

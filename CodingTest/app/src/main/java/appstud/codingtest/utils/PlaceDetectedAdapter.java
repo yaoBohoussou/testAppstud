@@ -59,7 +59,7 @@ public class PlaceDetectedAdapter extends ArrayAdapter<PlaceDetected>
             TextView textView = (TextView) view.findViewById(R.id.itemname);
 
             imageView.setImageBitmap(placeDetected.getImage());
-            textView.setText(placeDetected.getPlace().getName().toString());
+            textView.setText(placeDetected.getPlace().getName());
         }
 
         return view;
