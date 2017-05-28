@@ -20,6 +20,7 @@ import appstud.codingtest.MapActivity;
 import appstud.codingtest.utils.PhotoTask;
 
 /**
+ * Callback pour répondre aux évenements de recherche de places autour d'un point donné
  * Created by yann on 28/05/17.
  */
 
@@ -27,8 +28,13 @@ public class ResultCallbackImpl implements ResultCallback
 {
 
     private GoogleApiClient mGoogleApiClient;
-    Handler handler;
+    private Handler handler;
 
+    /**
+     * Création d'un ResultCallbackImpl
+     * @param mGoogleApiClient Client google API avec leque les éventuelles photos des places détectées seront récupérées
+     * @param handler Handler qui permetra aux Threads lancés de communiquer avec le Thread UI
+     */
     public ResultCallbackImpl(GoogleApiClient mGoogleApiClient,  Handler handler) {
         this.mGoogleApiClient = mGoogleApiClient;
         this.handler = handler;

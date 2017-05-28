@@ -152,7 +152,6 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback,
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
             Log.v(TAG, "permission to access position granted");
             mMap.setMyLocationEnabled(true);
-            //LocationServices.FusedLocationApi.
             retrievePlaces();
 
         } else {
@@ -166,6 +165,7 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback,
         Log.e(TAG, connectionResult.getErrorCode() + " : " + connectionResult.getErrorMessage());
     }
 
+    //FOnction qui récupère les places sÀ partir de la position courante du user ou à partir des données entrées dans le champ texte
     private void retrievePlaces()
     {
         if(MapActivity.placeDetecteds == null )

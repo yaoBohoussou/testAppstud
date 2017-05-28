@@ -16,9 +16,8 @@ import com.google.android.gms.location.places.Places;
 
 import java.util.Iterator;
 
-import appstud.codingtest.MapActivity;
-
 /**
+ *
  * Created by yann on 28/05/17.
  */
 
@@ -26,9 +25,14 @@ public class PhotoTask implements Runnable
 {
     private GoogleApiClient mGoogleApiClient;
     private PlaceLikelihood placeLikelihood;
-    //private Bitmap result;
     private Handler handler;
 
+    /**
+     * Création d'une place détectée
+     * @param mGoogleApiClient Client google API avec leque les éventuelles photos des places détectées seront récupérées
+     * @param placeLikelihood Carratéristiques de la place détectées. Cet objet est utilisé pour obtenir une photo si pssible du lieu
+     * @param handler Handler qui permetra Pour communiquer Les places détectées (PlaceDetected) au Thread UI
+     */
     public PhotoTask(GoogleApiClient mGoogleApiClient, PlaceLikelihood placeLikelihood, Handler handler) {
         this.mGoogleApiClient = mGoogleApiClient;
         this.placeLikelihood = placeLikelihood;

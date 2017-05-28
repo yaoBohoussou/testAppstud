@@ -16,14 +16,22 @@ import java.util.List;
 import appstud.codingtest.R;
 
 /**
+ * Adaptateur personalisé pour l'affichage des places avec leur photos dans la liste de l'Activité ListActivity
  * Created by yann on 28/05/17.
  */
 
 public class PlaceDetectedAdapter extends ArrayAdapter<PlaceDetected>
 {
+    //Liste des places détectées
     private List<PlaceDetected> placeDetectedList;
     private Context context;
 
+    /**
+     * Création d'un ResultCallbackImpl
+     * @param context Contexte dans lequel l'adapteur est instancié (Usuellement ListActivity.this
+     * @param resource Id du Layout qui décrit le contenu d'une cellule de la liste qui sera alimentée
+     * @param placeDetectedList Liste des places détectées qui seront affichées dans la liste
+     */
     public PlaceDetectedAdapter(@NonNull Context context, @LayoutRes int resource, List<PlaceDetected> placeDetectedList)
     {
         super(context, resource);
